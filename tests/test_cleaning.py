@@ -3299,3 +3299,56 @@ class TestFilterReplaceTypeAnnotations:
         assert isinstance(result, pd.DataFrame)
         assert result["a"].tolist() == ["X", "y"]
         assert result["b"].tolist() == ["X", "z"]
+
+
+class TestIsNullMappingKey:
+    def test_none_is_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(None) is True
+
+    def test_pd_na_is_null_key(self):
+        import pandas as pd
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(pd.NA) is True
+
+    def test_numpy_nan_is_null_key(self):
+        import numpy as np
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(np.nan) is True
+
+    def test_tuple_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(("a", "b")) is False
+
+    def test_list_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(["a", "b"]) is False
+
+    def test_dict_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key({"a": 1}) is False
+
+    def test_string_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key("None") is False
+        assert _is_null_mapping_key("") is False
+
+    def test_numeric_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(0) is False
+        assert _is_null_mapping_key(1) is False
+        assert _is_null_mapping_key(0.0) is False
+
+    def test_bool_is_not_null_key(self):
+        from arnio.cleaning import _is_null_mapping_key
+
+        assert _is_null_mapping_key(True) is False
+        assert _is_null_mapping_key(False) is False
