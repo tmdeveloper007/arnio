@@ -3308,13 +3308,11 @@ class TestIsNullMappingKey:
         assert _is_null_mapping_key(None) is True
 
     def test_pd_na_is_null_key(self):
-        import pandas as pd
         from arnio.cleaning import _is_null_mapping_key
 
         assert _is_null_mapping_key(pd.NA) is True
 
     def test_numpy_nan_is_null_key(self):
-        import numpy as np
         from arnio.cleaning import _is_null_mapping_key
 
         assert _is_null_mapping_key(np.nan) is True
