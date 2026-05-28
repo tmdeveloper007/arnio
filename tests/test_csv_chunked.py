@@ -226,3 +226,60 @@ class TestCsvChunkedIssue924:
         # Chunk 3 should raise on row 5 (value 5.5)
         with pytest.raises(Exception, match="Type mismatch"):
             next(reader)
+
+
+class TestReadCsvChunkedEdgeCases:
+    """Edge case tests for chunked CSV reading."""
+
+    def test_single_row_per_chunk(self, tmp_path):
+        lines = ["id,value"]
+        for i in range(10):
+            lines.append(f"{i},{i * 2}")
+        path = tmp_path / "single_rows.csv"
+        path.write_text("\n".join(lines))
+        chunks = _chunked_rows(str(path), chunksize=1)
+        assert len(chunks) == 10
+        assert chunks[0].shape[0] == 1
+
+    def test_exact_chunk_boundary(self, tmp_path):
+        lines = ["id,value"]
+        for i in range(100):
+            lines.append(f"{i},{i}")
+        path = tmp_path / "exact_boundary.csv"
+        path.write_text("\n".join(lines))
+        chunks = _chunked_rows(str(path), chunksize=10)
+        assert len(chunks) == 10
+        for i, chunk in enumerate(chunks):
+            assert chunk.shape[0] == 10, f"Chunk {i} should have 10 rows"
+
+    def test_large_chunksize_exceeds_data(self, tmp_path):
+        lines = ["id,value"]
+        for i in range(5):
+            lines.append(f"{i},{i}")
+        path = tmp_path / "small_data.csv"
+        path.write_text("\n".join(lines))
+        chunks = _chunked_rows(str(path), chunksize=100)
+        assert len(chunks) == 1
+        assert chunks[0].shape[0] == 5
+
+    def test_column_preserved_across_chunks(self, tmp_path):
+        lines = ["name,age,city"]
+        for i in range(50):
+            lines.append(f"user_{i},{20 + i % 10},city_{i % 3}")
+        path = tmp_path / "columns.csv"
+        path.write_text("\n".join(lines))
+        chunks = _chunked_rows(str(path), chunksize=10)
+        for chunk in chunks:
+            assert list(chunk.columns) == ["name", "age", "city"]
+
+    def test_chunk_iterator_stops_correctly(self, tmp_path):
+        lines = ["id"]
+        for i in range(25):
+            lines.append(str(i))
+        path = tmp_path / "stop_test.csv"
+        path.write_text("\n".join(lines))
+        reader = ar.read_csv_chunked(str(path), chunksize=5)
+        count = 0
+        for chunk in reader:
+            count += 1
+        assert count == 5
