@@ -116,3 +116,27 @@ class TestWinsorizeOutliersBoundary:
         assert pd.isna(df["val"].iloc[1]) is True
         assert df["val"].iloc[0] == pytest.approx(1.6)
         assert df["val"].iloc[4] == pytest.approx(71.2)
+
+
+class TestWinsorizeOutliersAdditional:
+    """Additional edge case tests for winsorize_outliers."""
+
+    def test_empty_frame(self):
+        """winsorize_outliers handles empty frame."""
+        frame = ar.from_pandas(pd.DataFrame({"val": []}))
+        result = winsorize_outliers(frame, lower=0.1, upper=0.9)
+        df = ar.to_pandas(result)
+        assert len(df) == 0
+
+    def test_two_row_frame(self):
+        """winsorize_outliers handles two-row frame."""
+        frame = ar.from_pandas(pd.DataFrame({"val": [1.0, 100.0]}))
+        result = winsorize_outliers(frame, lower=0.1, upper=0.9)
+        df = ar.to_pandas(result)
+        assert len(df) == 2
+
+    def test_returns_arframe_type(self):
+        """winsorize_outliers returns ArFrame when given ArFrame."""
+        frame = ar.from_pandas(pd.DataFrame({"val": [1.0, 2.0, 3.0]}))
+        result = winsorize_outliers(frame, lower=0.1, upper=0.9)
+        assert isinstance(result, ar.ArFrame)
